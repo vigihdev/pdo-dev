@@ -1,0 +1,26 @@
+# exclude everything except directory
+
+# exclude File
+/bootstrap.php
+/server.php
+/composer.lock
+/note.md
+/test-html.html
+
+# exclude File Dot
+.DS_Store
+.phpunit*
+.env
+/.phpunit*
+
+# exclude directory .Dot
+.amazonq
+.vscode
+
+# exclude directory
+/scripts
+/vendor
+/config
+/mock-data*
+/key
+/keys

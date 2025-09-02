@@ -1,0 +1,57 @@
+{
+    "name": "vigihdev/pdo-dev",
+    "version": "1.0.0",
+    "description": "Vigih dev packagist pdo dev",
+    "type": "library",
+    "keywords": [
+        "php",
+        "pdo dev"
+    ],
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "authors": [
+        {
+            "name": "Vigih Dev",
+            "email": "vigihdev@gmail.com",
+            "role": "developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Vigihdev\\PdoDev\\": "src/"
+        },
+        "files": [
+            "bootstrap.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "process-timeout": 0
+    },
+    "scripts": {
+        "defuse:generate:key": "Vigihdev\\CryptoDev\\Console\\CryptoDefuseConsole::generateKey",
+        "defuse:write:env": "Vigihdev\\CryptoDev\\Console\\CryptoDefuseConsole::writeEnvEncrypt",
+        "defuse:test": "Vigihdev\\CryptoDev\\Console\\CryptoDefuseConsole::testDecrypt",
+        "openssl:generate:key": "Vigihdev\\CryptoDev\\Console\\CryptoOpensslConsole::generateKey",
+        "openssl:write:env": "Vigihdev\\CryptoDev\\Console\\CryptoOpensslConsole::writeEnvEncrypt",
+        "openssl:test": "Vigihdev\\CryptoDev\\Console\\CryptoOpensslConsole::testDecrypt",
+        "test": "./vendor/bin/phpunit --colors=always",
+        "server": "php -S localhost:3432 server.php"
+    },
+    "require": {
+        "php": "^8.0",
+        "symfony/dependency-injection": "^6.4",
+        "symfony/config": "^6.4",
+        "symfony/yaml": "^6.4",
+        "symfony/dotenv": "^6.4",
+        "vigihdev/crypto-dev": "dev-main"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "10.5.x-dev"
+    }
+}
