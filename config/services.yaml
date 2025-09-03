@@ -1,0 +1,18 @@
+imports:
+  - { resource: "packages/yii.yaml" }
+
+parameters:
+  project.dir: "%env(PROJECT_DIR)%"
+  path.root: "%project.dir%"
+  path.config: "%project.dir%/config"
+  path.secrets: "%path.config%/secrets"
+  db.password: "%env(DB_PASSWORD)%"
+
+services:
+  pdo.connection:
+    public: true
+    class: 'Vigihdev\PdoDev\Connection\PdoConnection'
+    arguments:
+      $dsn: "mysql:host=localhost;dbname=mysql;charset=utf8mb4"
+      $username: "root"
+      $password: "%db.password%"

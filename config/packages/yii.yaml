@@ -1,0 +1,11 @@
+services:
+  Vigihdev\PdoDev\Connection\YiiDbConnection:
+    arguments:
+      $dsn: "mysql:host=localhost;dbname=mysql;charset=utf8mb4"
+      $username: "root"
+      $password: "%db.password%"
+
+  yii.db:
+    public: true
+    class: Vigihdev\PdoDev\Connection\Connection
+    factory: ['@Vigihdev\PdoDev\Connection\YiiDbConnection', "connection"]

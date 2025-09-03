@@ -1,34 +1,5 @@
 <?php
 
-$vendorDir = null;
-// bootstrap.php - Most reliable approach
-// Always try relative path first
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    $vendorDir = dirname(__DIR__ . '/vendor/autoload.php');
-    require_once __DIR__ . '/vendor/autoload.php';
-}
-// Then try parent directory (for CLI tools)
-elseif (file_exists(__DIR__ . '/../../autoload.php')) {
-    $vendorDir = dirname(__DIR__ . '/../../autoload.php');
-    require_once __DIR__ . '/../../autoload.php';
-}
-// Then try Composer's vendor directory
-elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    $vendorDir = dirname(__DIR__ . '/../autoload.php');
-    require_once __DIR__ . '/../vendor/autoload.php';
-}
-// Finally, use include path
-else {
-    $includePaths = explode(PATH_SEPARATOR, get_include_path());
-    foreach ($includePaths as $path) {
-        $vendorPath = $path . '/vendor/autoload.php';
-        if (file_exists($vendorPath)) {
-            $vendorDir = $path . '/vendor';
-            require_once $vendorPath;
-            break;
-        }
-    }
-}
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -37,13 +8,13 @@ use Symfony\Component\Dotenv\Dotenv;
 use Vigihdev\PdoDev\ServiceLocator;
 
 $container = new ContainerBuilder();
-$loader = new YamlFileLoader($container, new FileLocator(dirname($vendorDir) . '/../../config'));
+$loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/config'));
 $loader->load('services.yaml');
 
 // Load Dotenv
-(new Dotenv())->load(dirname($vendorDir) . '/../../.env');
+(new Dotenv())->load(__DIR__ . '/.env');
 
-foreach ((new Dotenv())->parse(file_get_contents(__DIR__ . '/../../.env')) as $key => $value) {
+foreach ((new Dotenv())->parse(file_get_contents(__DIR__ . '/.env')) as $key => $value) {
     $key = mb_strtolower(preg_replace('/[\_]+/m', '.', $key));
 
     // ✅ ABSOLUTE PATH GUARANTEE

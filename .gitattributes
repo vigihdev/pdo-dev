@@ -8,3 +8,4 @@
 # pastikan docs tetap ikut
 /docs !export-ignore
 /bootstrap.php !export-ignore
+/config !export-ignore

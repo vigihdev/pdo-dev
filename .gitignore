@@ -10,7 +10,7 @@
 # exclude File Dot
 .DS_Store
 .phpunit*
-.env
+# .env
 /.phpunit*
 
 # exclude directory .Dot
@@ -20,7 +20,7 @@
 # exclude directory
 /scripts
 /vendor
-/config
+/config/secrets
 /mock-data*
 /key
 /keys
