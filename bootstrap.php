@@ -37,11 +37,11 @@ use Symfony\Component\Dotenv\Dotenv;
 use Vigihdev\PdoDev\ServiceLocator;
 
 $container = new ContainerBuilder();
-$loader = new YamlFileLoader($container, new FileLocator(dirname($vendorDir) . '/config'));
+$loader = new YamlFileLoader($container, new FileLocator(dirname($vendorDir) . '/../../config'));
 $loader->load('services.yaml');
 
 // Load Dotenv
-(new Dotenv())->load(dirname($vendorDir) . '/.env');
+(new Dotenv())->load(dirname($vendorDir) . '/../../.env');
 
 foreach ((new Dotenv())->parse(file_get_contents(__DIR__ . '/.env')) as $key => $value) {
     $key = mb_strtolower(preg_replace('/[\_]+/m', '.', $key));
