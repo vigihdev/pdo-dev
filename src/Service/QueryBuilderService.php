@@ -16,5 +16,8 @@ final class QueryBuilderService
 
     public function __construct(
         private readonly PDOConnectionContract $connection
-    ) {}
+    ) {
+
+        $this->pdo = $connection->getConnection();
+    }
 }

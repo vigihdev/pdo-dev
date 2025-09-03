@@ -7,7 +7,7 @@ namespace Vigihdev\PdoDev;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 
-class GlobalContainer
+class ServiceLocator
 {
     private static ?ContainerInterface $container = null;
 

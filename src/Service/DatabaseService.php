@@ -19,12 +19,23 @@ final class DatabaseService
 
     public function __construct(
         private readonly PDOConnectionContract $connection
-    ) {}
-
+    ) {
+        $this->pdo = $connection->getConnection();
+    }
 
 
     /**
-     * Membuat database beserta user dan privileges
+     * Setup database dan user baru
+     *
+     * @param string $databaseName Nama database yang akan dibuat
+     * @param string $username Username untuk user baru
+     * @param string $password Password untuk user baru
+     * @param string $host Host untuk user (default: localhost)
+     * @param string $charset Character set database (default: utf8mb4)
+     * @param string $collation Collation database (default: utf8mb4_unicode_ci)
+     * @param array $privileges Hak akses user (default: ALL)
+     * @return bool True jika berhasil
+     * @throws RuntimeException Jika setup gagal
      */
     public function setupDatabase(
         string $databaseName,
@@ -36,14 +47,19 @@ final class DatabaseService
         array $privileges = ['ALL']
     ): bool {
         try {
+            $pdo = $this->pdo;
+
             // Create database
-            $this->createDatabase($databaseName, $charset, $collation);
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$databaseName}` CHARACTER SET {$charset} COLLATE {$collation}");
 
-            // Create user
-            $this->createUser($username, $password, $host);
+            // buat user baru
+            $pdo->exec("CREATE USER IF NOT EXISTS '{$username}'@'{$host}' IDENTIFIED BY '{$password}'");
 
-            // Grant privileges
-            $this->grantPrivileges($username, $databaseName, $host, $privileges);
+            // kasih ALL PRIVILEGES ke user itu untuk semua database
+            $pdo->exec("GRANT ALL PRIVILEGES ON *.* TO '{$username}'@'{$host}' WITH GRANT OPTION");
+
+            // reload hak akses
+            $pdo->exec("FLUSH PRIVILEGES");
 
             return true;
         } catch (Exception $e) {
@@ -52,74 +68,93 @@ final class DatabaseService
     }
 
     /**
-     * Membuat database baru
+     * Jalankan query dengan binding parameter
+     *
+     * @param string $sql Query SQL yang akan dijalankan
+     * @param array $params Parameter untuk binding
+     * @return \PDOStatement Statement yang sudah dieksekusi
+     * @throws PDOException Jika query gagal
      */
-    protected function createDatabase(
-        string $databaseName,
-        string $charset = 'utf8mb4',
-        string $collation = 'utf8mb4_unicode_ci',
-        bool $ifNotExists = true
-    ): bool {
-
-        try {
-
-            $ifNotExistsClause = $ifNotExists ? 'IF NOT EXISTS' : '';
-            $sql = "CREATE DATABASE $ifNotExistsClause `$databaseName` 
-                    CHARACTER SET $charset 
-                    COLLATE $collation";
-
-            return $this->pdo->exec($sql) !== false;
-        } catch (PDOException $e) {
-            throw new \RuntimeException("Failed to create database: " . $e->getMessage());
-        }
+    public function query(string $sql, array $params = []): \PDOStatement
+    {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt;
     }
 
     /**
-     * Membuat user untuk database
+     * Ambil satu baris hasil query
+     *
+     * @param string $sql Query SQL
+     * @param array $params Parameter untuk binding
+     * @return array|null Hasil query atau null jika tidak ada
+     * @throws PDOException Jika query gagal
      */
-    protected function createUser(
-        string $username,
-        string $password,
-        string $host = 'localhost',
-        array $privileges = ['ALL']
-    ): bool {
-
-        try {
-            $pdo = $this->pdo;
-
-            // Create user
-            $createUserSql = "CREATE USER '" . $pdo->quote($username) . "'@'" . $pdo->quote($host) . "' 
-                             IDENTIFIED BY '" . $pdo->quote($password) . "'";
-
-            $pdo->exec($createUserSql);
-            return true;
-        } catch (PDOException $e) {
-            throw new RuntimeException("Failed to create user: " . $e->getMessage());
-        }
+    public function fetch(string $sql, array $params = []): ?array
+    {
+        $stmt = $this->query($sql, $params);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
     }
 
     /**
-     * Memberikan privileges ke user untuk database tertentu
+     * Ambil semua hasil query sebagai array
+     *
+     * @param string $sql Query SQL
+     * @param array $params Parameter untuk binding
+     * @return array Semua hasil query
+     * @throws PDOException Jika query gagal
      */
-    protected function grantPrivileges(
-        string $username,
-        string $databaseName,
-        string $host = 'localhost',
-        array $privileges = ['ALL']
-    ): bool {
-        try {
-            $pdo = $this->pdo;
+    public function fetchAll(string $sql, array $params = []): array
+    {
+        $stmt = $this->query($sql, $params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-            $privilegesList = implode(', ', $privileges);
-            $grantSql = "GRANT $privilegesList ON `$databaseName`.* 
-                        TO '" . $pdo->quote($username) . "'@'" . $pdo->quote($host) . "'";
+    /**
+     * Jalankan query INSERT, UPDATE, DELETE
+     *
+     * @param string $sql Query SQL non-select
+     * @param array $params Parameter untuk binding
+     * @return bool True jika berhasil
+     * @throws PDOException Jika query gagal
+     */
+    public function execute(string $sql, array $params = []): bool
+    {
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($params);
+    }
 
-            $pdo->exec($grantSql);
-            $pdo->exec("FLUSH PRIVILEGES");
+    /**
+     * Mulai transaksi database
+     *
+     * @return void
+     * @throws PDOException Jika transaksi gagal dimulai
+     */
+    public function beginTransaction(): void
+    {
+        $this->pdo->beginTransaction();
+    }
 
-            return true;
-        } catch (PDOException $e) {
-            throw new RuntimeException("Failed to grant privileges: " . $e->getMessage());
-        }
+    /**
+     * Commit transaksi
+     *
+     * @return void
+     * @throws PDOException Jika commit gagal
+     */
+    public function commit(): void
+    {
+        $this->pdo->commit();
+    }
+
+    /**
+     * Rollback transaksi
+     *
+     * @return void
+     * @throws PDOException Jika rollback gagal
+     */
+    public function rollBack(): void
+    {
+        $this->pdo->rollBack();
     }
 }

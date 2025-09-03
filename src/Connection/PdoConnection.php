@@ -6,9 +6,9 @@ namespace Vigihdev\PdoDev\Connection;
 
 use PDO;
 use PDOException;
-use Vigihdev\CryptoDev\CryptoOpenssl;
+use Vigihdev\CryptoDev\CryptoDefuse;
 use Vigihdev\PdoDev\Contract\PDOConnectionContract;
-use Vigihdev\PdoDev\GlobalContainer;
+use Vigihdev\PdoDev\ServiceLocator;
 
 /**
  * PdoConnection
@@ -28,17 +28,26 @@ final class PdoConnection implements PDOConnectionContract
         private readonly string $dsn,
         private readonly string $username,
         private readonly string $password,
-        private readonly array $options = []
+        private array $options = []
     ) {
 
 
-        $key = GlobalContainer::getContainer()->getParameter('path.secrets') . DIRECTORY_SEPARATOR . '.key';
+        $key = ServiceLocator::getContainer()->getParameter('path.secrets') . DIRECTORY_SEPARATOR . '.defuse.key';
+
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
+            PDO::ATTR_PERSISTENT => false,
+            PDO::ATTR_TIMEOUT => 30,
+        ];
 
         $this->connect(
             $this->dsn,
             $this->username,
-            CryptoOpenssl::decrypt($this->password, $key),
-            $this->options
+            CryptoDefuse::decrypt($this->password, $key),
+            $options
         );
     }
 
